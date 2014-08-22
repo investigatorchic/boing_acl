@@ -1,0 +1,64 @@
+
+To add in the support for MYFS I needed to do this (do not include the
+lines with dashes in what you add to the files mentioned) :
+
+	1) Add the following lines to ~/OSI/src/sys/conf/files :
+
+----------------
+local/acl.c                     standard
+local/myfs/myfs_ffs_alloc.c	optional myfs
+local/myfs/myfs_ffs_balloc.c	optional myfs
+local/myfs/myfs_ffs_inode.c	optional myfs
+local/myfs/myfs_ffs_snapshot.c	optional myfs
+local/myfs/myfs_ffs_softdep.c	optional myfs
+local/myfs/myfs_ffs_subr.c	optional myfs
+local/myfs/myfs_ffs_tables.c	optional myfs
+local/myfs/myfs_ffs_vfsops.c	optional myfs
+local/myfs/myfs_ffs_vnops.c	optional myfs
+local/myfs/myfs_ufs_acl.c	optional myfs
+local/myfs/myfs_ufs_bmap.c	optional myfs
+local/myfs/myfs_ufs_dirhash.c	optional myfs
+local/myfs/myfs_ufs_extattr.c	optional myfs
+local/myfs/myfs_ufs_gjournal.c	optional myfs
+local/myfs/myfs_ufs_inode.c	optional myfs
+local/myfs/myfs_ufs_lookup.c	optional myfs
+local/myfs/myfs_ufs_quota.c	optional myfs
+local/myfs/myfs_ufs_vfsops.c	optional myfs
+local/myfs/myfs_ufs_vnops.c	optional myfs
+----------------
+
+	2) Add the following lines to ~/OSI/src/sys/conf/options :
+
+----------------
+# Test filesystem
+MYFS                    opt_myfs.h
+----------------
+
+	3) Add the following line to your kernel config file (for me that
+	   is ~/OSI/src/sys/amd64/conf/KENSMITH) :
+
+----------------
+options         MYFS                    #Test Filesystem
+----------------
+
+	   Remove the options SOFTUPDATES, UFS_ACL, UFS_DIRHASH,
+	   and UFS_GJOURNAL.
+
+	4) Copy the files/directories here to your ~/OSI directory,
+	   preserving the directory structure.
+
+	5) Add the system calls mentioned in the Project Description to
+	   ~/OSI/src/sys/kern/syscalls.master and run the makesyscalls.sh
+	   script.
+
+	6) Look at the stub functions for the three new system calls in the
+	   file ~/OSI/src/sys/local/acl.c.  One of them shows an example
+	   of how you can see if a file comes from a myfs filesystem.  In
+	   the "Examples" sub-directory is a small test program you can
+	   use to test it with.
+
+	7) I think that's it...  Try building the kernel from scratch.
+	   Given how much has changed it might be a good idea to just
+	   remove your entire kernel build directory so even it gets
+	   rebuilt from scratch.
+
