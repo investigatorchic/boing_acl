@@ -18,6 +18,8 @@
 #include "../../../local/myfs/myfs_ufs_extern.h"
 #include "../../../local/myfs/myfs_ffs_extern.h"
 
+/* This is a comment.  */
+
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
 {
