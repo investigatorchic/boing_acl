@@ -18,7 +18,20 @@
 #include "../../../local/myfs/myfs_ufs_extern.h"
 #include "../../../local/myfs/myfs_ffs_extern.h"
 
-/* This is a comment.  */
+#include "acl-def.h"
+
+/**
+ *  This new entry should
+ *  be added to the current list of ACLs for the file.  If the id number
+ *  passed in to this system call is zero then the id number of the
+ *  currently running process should be used
+ *  
+ * @param char* name 
+ * @param int   type  ( 0 if the id is a uid, 1 if id is a gid )
+ * @param int   idnum 
+ * @param int   perms ( bit 2 for read, bit 1 for write, bit 0 for execute )
+ * @return int 0 if successful, non 0 if not. 
+ */
 
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
