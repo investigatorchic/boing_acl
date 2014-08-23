@@ -34,6 +34,24 @@
  */
 
 int
+validate_type(int type)
+{
+	if ((t & (ACLS_TYPE_MYFS_UID | ACLS_TYPE_MYFS_GID)) == 0)
+		return 0; /* invalid */
+	return 1; /* valid */
+}
+
+int
+validate_permissions(int perms)
+{
+	if ((t & (IEXEC | IREAD | IWRITE)) == 0)
+                return 0; /* invalid */
+        return 1; /* valid */
+
+}
+
+
+int
 sys_setacl(struct thread *td, struct setacl_args *uap)
 {
 	int error;

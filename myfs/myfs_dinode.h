@@ -111,12 +111,21 @@ typedef int64_t myfs_ufs_time_t;
 #define	IFSOCK		0140000		/* UNIX domain socket. */
 #define	IFWHT		0160000		/* Whiteout. */
 
+#define MAX_ACLS_MYFS 16
+#define ACLS_TYPE_MYFS_UID 0x0
+#define ACLS_TYPE_MYFS_GID 0x1
+
 /*
  * A dinode contains all the meta-data associated with a MYFS2 file.
  * This structure defines the on-disk format of a dinode. Since
  * this structure describes an on-disk structure, all its fields
  * are defined by types with precise widths.
  */
+
+struct myfs_acl_entry {
+	id_t	id;
+	u_int32_t perms;
+};
 
 #define	MYFS_NXADDR	2			/* External addresses in inode. */
 #define	MYFS_NDADDR	12			/* Direct addresses in inode. */
@@ -147,6 +156,10 @@ struct myfs_ufs2_dinode {
 	myfs_ufs2_daddr_t	di_ib[MYFS_NIADDR];	/* 208: Indirect disk blocks. */
 	u_int64_t	di_modrev;	/* 232: i_modrev for NFSv4 */
 	int64_t		di_spare[2];	/* 240: Reserved; currently unused */
+
+	struct myfs_acl_entry myfs_acl_uid[MAX_ACLS_MYFS];
+	struct myfs_acl_entry myfs_acl_gid[MAX_ACLS_MYFS];
+
 };
 
 /*
