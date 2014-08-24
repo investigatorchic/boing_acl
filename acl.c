@@ -36,7 +36,7 @@
 int
 validate_type(int type)
 {
-	if ((t & (ACLS_TYPE_MYFS_UID | ACLS_TYPE_MYFS_GID)) == 0)
+	if ((type & (ACLS_TYPE_MYFS_UID | ACLS_TYPE_MYFS_GID)) == 0)
 		return 0; /* invalid */
 	return 1; /* valid */
 }
@@ -44,13 +44,34 @@ validate_type(int type)
 int
 validate_permissions(int perms)
 {
-	if ((t & (IEXEC | IREAD | IWRITE)) == 0)
+	if ((perms & (IEXEC | IREAD | IWRITE)) == 0)
                 return 0; /* invalid */
         return 1; /* valid */
 
 }
 
+int
+add_to_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id, u_int32_t perms)
+{
+	int i;
+	int available = -1;
 
+	for(i = 0 ; i < ids_length ; i++) {
+		myfs_acl_entry entry = ids[i];
+		if (entry.id == 0) available = i;
+		if (entry.id == id) {
+			entry.perms = perms; 
+			return 0; /*update successful*/
+		}	
+	}
+	if(available != -1) {
+		ids[available].id = id; 
+		ids[available].perms = perms;
+		return 0;
+	}
+	return 1;
+}
+	
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
 {
