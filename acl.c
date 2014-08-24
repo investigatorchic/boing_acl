@@ -77,7 +77,7 @@ clear_from_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 {
 
 	int i;
-	if(uid == 0) return EINVAL;
+	if(id == 0) return EINVAL;
 
 	for(i = 0 ; i < ids_length ; i++) {
                 struct myfs_acl_entry entry = ids[i];
@@ -86,8 +86,24 @@ clear_from_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 			entry.id = 0;
                         return 0; /*clear successful*/
                 }
+	}
 	return 0;
+}
 
+int 
+get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
+{
+
+	int i;
+	if(id == 0) return EINVAL;
+
+	for(i = 0 ; i < ids_length ; i++) {
+		struct myfs_acl_entry entry = ids[i];
+                if (entry.id == id) {
+			return entry.perms;
+		}
+	}	
+	return 1;
 }
 
 	
