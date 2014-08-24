@@ -90,6 +90,18 @@ clear_from_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 	return 0;
 }
 
+int
+group_check(struct ucred *ucred, gid_t gid)
+{
+	if (ucred) {
+		int i;
+		for (i = 0; i < ucred->cr_ngroups ; i++)
+			if (ucred->cr_groups[i] == gid) return 1;
+	}
+	return 0;
+}
+
+
 int 
 get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 {
