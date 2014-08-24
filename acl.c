@@ -57,7 +57,7 @@ add_to_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id, u_int32_t 
 	int available = -1;
 
 	for(i = 0 ; i < ids_length ; i++) {
-		myfs_acl_entry entry = ids[i];
+		struct myfs_acl_entry entry = ids[i];
 		if (entry.id == 0) available = i;
 		if (entry.id == id) {
 			entry.perms = perms; 
@@ -71,6 +71,25 @@ add_to_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id, u_int32_t 
 	}
 	return 1;
 }
+
+int
+clear_from_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
+{
+
+	int i;
+	if(uid == 0) return EINVAL;
+
+	for(i = 0 ; i < ids_length ; i++) {
+                struct myfs_acl_entry entry = ids[i];
+                if (entry.id == id) {
+                        entry.perms = 0;
+			entry.id = 0;
+                        return 0; /*clear successful*/
+                }
+	return 0;
+
+}
+
 	
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
