@@ -118,22 +118,71 @@ get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 	return 1;
 }
 
+int
+process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct setacl_args *uap)
+{
+	int error = EPERM;
+	id_t idnum = uap->idnum;
+	if (!IAMGROOT || (UID_NOW != inode->dinode_u.din2->di_uid)) {
+		error = EPERM;
+	}
+	else {
+		switch(uap->type) {
+                	case ACLS_TYPE_MYFS_UID:
+				if ( ( idnum == 0 || idnum == my_uid) && ( my_uid == di_uid) ) {
+       					error = EPERM;
+				}
+				else {
+					error = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_uid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);
+				}
+				break;
+			case ACLS_TYPE_MYFS_GID:
+				if (idnum == 0) idnum = GID_NOW;
+				if (IAMGROOT || group_check(td->td_ucred, idnum)) {
+					error = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_gid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);	
+				}
+				else {
+					error = EACCES;
+				}
+				break;
+		}
+	return error;
+}
 	
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
 {
 	int error;
 	struct nameidata nd;
+	char fname[256];
+	size_t actual = 0;
+
+	copyinstr(uap->name, &fname, 255, &actual);
+
+	if ( (validate_type(uap->type) == 0 ) && ( validate_perms( uap->perms ) == 0) ) {
+		return EINVAL;
+	}
+
+	if (IAMGROOT && uap->type == ACLS_TYPE_MYFS_UID && uap->idnum == 0) {	
+		return EINVAL;
+	}
 
 	NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, uap->name, td);
 	if ((error = namei(&nd)) != 0)
 		return error;
 	NDFREE(&nd, NDF_ONLY_PNBUF);
-	if (nd.ni_vp->v_op == &myfs_ffs_vnodeops2)
+
+	if (nd.ni_vp->v_op == &myfs_ffs_vnodeops2) {
+ 		struct myfs_inode *my_inode;
+		id_t idnum = uap->idnum;
+		VI_LOCK(nd.ni_vp);
 		uprintf("File was in a myfs filesystem.\n");
+		my_inode = MYFS_VTOI(nd.ni_vp);
+	}
 	else
 		uprintf("File was not in a myfs filesystem.\n");
 	vrele(nd.ni_vp);
+*/
 	return 0;
 }
 
