@@ -121,32 +121,32 @@ get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 int
 process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct setacl_args *uap)
 {
-	int error = EPERM;
+	int result = EPERM;
 	id_t idnum = uap->idnum;
 	if (!IAMGROOT || (UID_NOW != inode->dinode_u.din2->di_uid)) {
-		error = EPERM;
+		result = EPERM;
 	}
 	else {
 		switch(uap->type) {
                 	case ACLS_TYPE_MYFS_UID:
 				if ( ( idnum == 0 || idnum == my_uid) && ( my_uid == di_uid) ) {
-       					error = EPERM;
+       					result = EPERM;
 				}
 				else {
-					error = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_uid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);
+					result = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_uid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);
 				}
 				break;
 			case ACLS_TYPE_MYFS_GID:
 				if (idnum == 0) idnum = GID_NOW;
 				if (IAMGROOT || group_check(td->td_ucred, idnum)) {
-					error = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_gid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);	
+					result = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_gid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);	
 				}
 				else {
-					error = EACCES;
+					result = EACCES;
 				}
 				break;
 		}
-	return error;
+	return result;
 }
 	
 int
@@ -178,12 +178,15 @@ sys_setacl(struct thread *td, struct setacl_args *uap)
 		VI_LOCK(nd.ni_vp);
 		uprintf("File was in a myfs filesystem.\n");
 		my_inode = MYFS_VTOI(nd.ni_vp);
+	 	error = process_acl_addition(td, my_inode, uap);
+		VI_UNLOCK(nd.ni_vp);	
 	}
-	else
+	else {
 		uprintf("File was not in a myfs filesystem.\n");
+		error = EPERM;
+	}
 	vrele(nd.ni_vp);
-*/
-	return 0;
+	return error;
 }
 
 int
