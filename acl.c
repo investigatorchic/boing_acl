@@ -123,23 +123,23 @@ process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct seta
 {
 	int result = EPERM;
 	id_t idnum = uap->idnum;
-	if (!IAMGROOT || (UID_NOW != inode->dinode_u.din2->di_uid)) {
+	if (!IAMGROOT || (UID_NOW != my_inode->dinode_u.din2->di_uid)) {
 		result = EPERM;
 	}
 	else {
 		switch(uap->type) {
                 	case ACLS_TYPE_MYFS_UID:
-				if ( ( idnum == 0 || idnum == my_uid) && ( my_uid == di_uid) ) {
+				if ( ( idnum == 0 || idnum == UID_NOW) && ( UID_NOW == my_inode->dinode_u.din2->di_uid) ) {
        					result = EPERM;
 				}
 				else {
-					result = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_uid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);
+					result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);
 				}
 				break;
 			case ACLS_TYPE_MYFS_GID:
 				if (idnum == 0) idnum = GID_NOW;
 				if (IAMGROOT || group_check(td->td_ucred, idnum)) {
-					result = add_to_acl_by_id(inode->dinode_u.din2->myfs_acl_gid, sizeof(inode->dinode_u.din2->myfs_acl_gid) / (struct myfs_acl_entry), idnum, uap->perms);	
+					result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);	
 				}
 				else {
 					result = EACCES;
@@ -159,7 +159,7 @@ sys_setacl(struct thread *td, struct setacl_args *uap)
 
 	copyinstr(uap->name, &fname, 255, &actual);
 
-	if ( (validate_type(uap->type) == 0 ) && ( validate_perms( uap->perms ) == 0) ) {
+	if ( (validate_type(uap->type) == 0 ) && ( validate_permissions( uap->perms ) == 0) ) {
 		return EINVAL;
 	}
 
