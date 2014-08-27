@@ -146,6 +146,7 @@ process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct seta
 				}
 				break;
 		}
+	}
 	return result;
 }
 	
@@ -174,7 +175,6 @@ sys_setacl(struct thread *td, struct setacl_args *uap)
 
 	if (nd.ni_vp->v_op == &myfs_ffs_vnodeops2) {
  		struct myfs_inode *my_inode;
-		id_t idnum = uap->idnum;
 		VI_LOCK(nd.ni_vp);
 		uprintf("File was in a myfs filesystem.\n");
 		my_inode = MYFS_VTOI(nd.ni_vp);
