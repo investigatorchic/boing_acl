@@ -184,12 +184,15 @@ sys_setacl(struct thread *td, struct setacl_args *uap)
 	char fname[256];
 	size_t actual = 0;
 
+	printf("pre-copyinstr\n");
 	copyinstr(uap->name, &fname, 255, &actual);
-
+	printf("first if\n");
+	printf("%d\n", uap->type);
+	printf("%d\n", uap->perms);
 	if ( (validate_type(uap->type) == 0 ) && ( validate_permissions( uap->perms ) == 0) ) {
 		return EINVAL;
 	}
-
+	printf("second if\n");
 	if (IAMGROOT && uap->type == ACLS_TYPE_MYFS_UID && uap->idnum == 0) {	
 		return EINVAL;
 	}
@@ -222,9 +225,10 @@ sys_clearacl(struct thread *td, struct clearacl_args *uap)
 	struct nameidata nd;
 	char fname[256];
 	size_t actual = 0;
-
+	printf("pre-copyinstr\n");
 	copyinstr(uap->name, &fname, 255, &actual);
-
+	printf("first if\n");
+        printf("%d\n", uap->type);
 	if ( (validate_type(uap->type) == 0 )) {
 		return EINVAL;
 	}
