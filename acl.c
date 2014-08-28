@@ -105,11 +105,11 @@ get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 {
 
 	int i;
-	if(id == 0) return EINVAL;
 
 	for(i = 0 ; i < ids_length ; i++) {
 		struct myfs_acl_entry entry = ids[i];
                 if (entry.id == id) {
+			printf("before entry.perms\n");
 			return entry.perms;
 		}
 	}	
@@ -175,16 +175,21 @@ process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearac
 int
 process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_args *uap)
 {
+	printf("179\n");
 	int result = EPERM;
+	printf("181\n");
         id_t idnum = uap->idnum;
+	printf("183\n");
         if (!IAMGROOT || (UID_NOW != my_inode->dinode_u.din2->di_uid)) {
                 result = EPERM;
+		printf("186\n");
         }
         else {
                 switch(uap->type) {
                         case ACLS_TYPE_MYFS_UID:
+				printf("190\n");
 				if (idnum == 0) idnum = UID_NOW;
-				result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
+				result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
                                 break;
                         case ACLS_TYPE_MYFS_GID:
                                 if (idnum == 0) idnum = GID_NOW;
