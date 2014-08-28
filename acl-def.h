@@ -22,7 +22,8 @@ group_check(struct ucred *ucred, gid_t gid);
 int
 process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct setacl_args *uap);
 
-
+int
+process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearacl_args *uap);
 
 
 
