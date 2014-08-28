@@ -172,7 +172,29 @@ process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearac
         return result;
 }
 
+int
+process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_args *uap)
+{
+	int result = EPERM;
+        id_t idnum = uap->idnum;
+        if (!IAMGROOT || (UID_NOW != my_inode->dinode_u.din2->di_uid)) {
+                result = EPERM;
+        }
+        else {
+                switch(uap->type) {
+                        case ACLS_TYPE_MYFS_UID:
+				if (idnum == 0) idnum = UID_NOW;
+				result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
+                                break;
+                        case ACLS_TYPE_MYFS_GID:
+                                if (idnum == 0) idnum = GID_NOW;
+                                result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
+                                break;
+                }
+        }
+        return result;
 
+}
 	
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
@@ -255,5 +277,35 @@ sys_clearacl(struct thread *td, struct clearacl_args *uap)
 int
 sys_getacl(struct thread *td, struct getacl_args *uap)
 {
-	return 0;
+	int error;
+	struct nameidata nd;
+	char fname[256];
+	size_t actual = 0;
+	printf("pre-copyinstr\n");
+	copyinstr(uap->name, &fname, 255, &actual);
+	printf("first if\n");
+        printf("%d\n", uap->type);
+	if ( (validate_type(uap->type) == 0 )) {
+		return EINVAL;
+	}
+
+	NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, uap->name, td);
+	if ((error = namei(&nd)) != 0)
+		return error;
+	NDFREE(&nd, NDF_ONLY_PNBUF);
+
+	if (nd.ni_vp->v_op == &myfs_ffs_vnodeops2) {
+ 		struct myfs_inode *my_inode;
+		VI_LOCK(nd.ni_vp);
+		uprintf("File was in a myfs filesystem.\n");
+		my_inode = MYFS_VTOI(nd.ni_vp);
+	 	error = process_acl_get(td, my_inode, uap);
+		VI_UNLOCK(nd.ni_vp);	
+	}
+	else {
+		uprintf("File was not in a myfs filesystem.\n");
+		error = EPERM;
+	}
+	vrele(nd.ni_vp);
+	return error;
 }

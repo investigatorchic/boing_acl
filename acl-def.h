@@ -25,7 +25,8 @@ process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct seta
 int
 process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearacl_args *uap);
 
-
+int
+process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_args *uap);
 
 
 
