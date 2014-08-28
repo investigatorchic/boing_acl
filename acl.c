@@ -36,9 +36,7 @@
 int
 validate_type(int type)
 {
-	if ((type & (ACLS_TYPE_MYFS_UID | ACLS_TYPE_MYFS_GID)) == 0)
-		return 0; /* invalid */
-	return 1; /* valid */
+	return type == ACLS_TYPE_MYFS_UID || type == ACLS_TYPE_MYFS_GID;	
 }
 
 int
