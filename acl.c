@@ -105,10 +105,11 @@ get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 {
 
 	int i;
-
+	printf("108\n");
 	for(i = 0 ; i < ids_length ; i++) {
 		struct myfs_acl_entry entry = ids[i];
-                if (entry.id == id) {
+		printf("%d == %d: %d | %d\n", (int) id, (int) entry.id, entry.id == id, ((int) entry.id) == ((int) id) );
+		if (entry.id == id) {
 			printf("before entry.perms\n");
 			return entry.perms;
 		}
@@ -131,7 +132,7 @@ process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct seta
        					result = EPERM;
 				}
 				else {
-					result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);
+					result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);
 				}
 				break;
 			case ACLS_TYPE_MYFS_GID:
@@ -161,7 +162,7 @@ process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearac
                 switch(uap->type) {
                         case ACLS_TYPE_MYFS_UID:
 				if (idnum == 0) idnum = UID_NOW;
-				result = clear_from_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
+				result = clear_from_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
                                 break;
                         case ACLS_TYPE_MYFS_GID:
                                 if (idnum == 0) idnum = GID_NOW;
@@ -190,7 +191,8 @@ process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_ar
 				printf("190\n");
 				if (idnum == 0) idnum = UID_NOW;
 				result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
-                                break;
+                                printf("%d\n" , result);
+				 break;
                         case ACLS_TYPE_MYFS_GID:
                                 if (idnum == 0) idnum = GID_NOW;
                                 result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
@@ -305,6 +307,7 @@ sys_getacl(struct thread *td, struct getacl_args *uap)
 		uprintf("File was in a myfs filesystem.\n");
 		my_inode = MYFS_VTOI(nd.ni_vp);
 	 	error = process_acl_get(td, my_inode, uap);
+		printf("%d\n" , error);
 		VI_UNLOCK(nd.ni_vp);	
 	}
 	else {
@@ -312,5 +315,6 @@ sys_getacl(struct thread *td, struct getacl_args *uap)
 		error = EPERM;
 	}
 	vrele(nd.ni_vp);
+	printf("%d\n" , error);
 	return error;
 }
