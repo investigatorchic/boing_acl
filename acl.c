@@ -151,20 +151,20 @@ process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearac
 {
         int result = EPERM;
         id_t idnum = uap->idnum;
-        if (!IAMGROOT || (UID_NOW != my_inode->dinode_u.din2->di_uid)) {
-                result = EPERM;
-        }
-        else {
-                switch(uap->type) {
+        if (IAMGROOT || (UID_NOW == my_inode->dinode_u.din2->di_uid)) {
+ 		switch(uap->type) {
                         case ACLS_TYPE_MYFS_UID:
-				if (idnum == 0) idnum = UID_NOW;
-				result = clear_from_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
+                                if (idnum == 0) idnum = UID_NOW;
+                                result = clear_from_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
                                 break;
                         case ACLS_TYPE_MYFS_GID:
                                 if (idnum == 0) idnum = GID_NOW;
                                 result = clear_from_acl_by_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
                                 break;
                 }
+        }
+        else {
+		result = EPERM;
         }
         return result;
 }
@@ -177,26 +177,24 @@ process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_ar
 	printf("181\n");
         id_t idnum = uap->idnum;
 	printf("183\n");
-        if (!IAMGROOT || (UID_NOW != my_inode->dinode_u.din2->di_uid)) {
-                result = EPERM;
-		printf("186\n");
-        }
-        else {
-                switch(uap->type) {
+        if (IAMGROOT || (UID_NOW == my_inode->dinode_u.din2->di_uid)) {
+ 		switch(uap->type) {
                         case ACLS_TYPE_MYFS_UID:
-				printf("190\n");
-				if (idnum == 0) idnum = UID_NOW;
-				result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
+                                printf("190\n");
+                                if (idnum == 0) idnum = UID_NOW;
+                                result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
                                 printf("%d\n" , result);
-				 break;
+                                 break;
                         case ACLS_TYPE_MYFS_GID:
                                 if (idnum == 0) idnum = GID_NOW;
                                 result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum);
                                 break;
-                }
-        }
+		}              
+       	}
+       	else {
+		result = EPERM;
+       	}
         return result;
-
 }
 	
 int
