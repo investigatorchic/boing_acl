@@ -122,29 +122,25 @@ process_acl_addition(struct thread *td, struct myfs_inode *my_inode, struct seta
 {
 	int result = EPERM;
 	id_t idnum = uap->idnum;
-	if (!IAMGROOT || (UID_NOW != my_inode->dinode_u.din2->di_uid)) {
-		result = EPERM;
-	}
-	else {
-		switch(uap->type) {
-                	case ACLS_TYPE_MYFS_UID:
-				if ( ( idnum == 0 || idnum == UID_NOW) && ( UID_NOW == my_inode->dinode_u.din2->di_uid) ) {
-       					result = EPERM;
-				}
-				else {
-					result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);
-				}
-				break;
-			case ACLS_TYPE_MYFS_GID:
-				if (idnum == 0) idnum = GID_NOW;
-				if (IAMGROOT || group_check(td->td_ucred, idnum)) {
-					result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);	
-				}
-				else {
-					result = EACCES;
-				}
-				break;
-		}
+	switch(uap->type) {
+               	case ACLS_TYPE_MYFS_UID:
+			printf("%d\n" , (!IAMGROOT));
+			if ((IAMGROOT) || (UID_NOW == my_inode->dinode_u.din2->di_uid)) {
+				 result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);		
+			}
+			else {
+				result = EPERM;
+			}
+			break;
+		case ACLS_TYPE_MYFS_GID:
+			if (idnum == 0) idnum = GID_NOW;
+			if (IAMGROOT || group_check(td->td_ucred, idnum)) {
+				result = add_to_acl_by_id(my_inode->dinode_u.din2->myfs_acl_gid, sizeof(my_inode->dinode_u.din2->myfs_acl_gid) / sizeof(struct myfs_acl_entry), idnum, uap->perms);	
+			}
+			else {
+				result = EACCES;
+			}
+			break;
 	}
 	return result;
 }
@@ -206,7 +202,7 @@ process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_ar
 int
 sys_setacl(struct thread *td, struct setacl_args *uap)
 {
-	int error;
+	int error = -1;
 	struct nameidata nd;
 	char fname[256];
 	size_t actual = 0;
@@ -217,16 +213,15 @@ sys_setacl(struct thread *td, struct setacl_args *uap)
 	printf("%d\n", uap->type);
 	printf("%d\n", uap->perms);
 	if ( (validate_type(uap->type) == 0 ) && ( validate_permissions( uap->perms ) == 0) ) {
-		return EINVAL;
-	}
-	printf("second if\n");
-	if (IAMGROOT && uap->type == ACLS_TYPE_MYFS_UID && uap->idnum == 0) {	
+		printf("second if\n");
 		return EINVAL;
 	}
 
 	NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, uap->name, td);
-	if ((error = namei(&nd)) != 0)
+	if ((error = namei(&nd)) != 0){
+		printf("221\n");
 		return error;
+	}
 	NDFREE(&nd, NDF_ONLY_PNBUF);
 
 	if (nd.ni_vp->v_op == &myfs_ffs_vnodeops2) {
