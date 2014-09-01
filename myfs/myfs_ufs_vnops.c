@@ -396,7 +396,9 @@ relock:
 	GID acls permit the operation for us.  If they do not, return error.  
 	*/
 
-	if(ap->a_td->td_ucred->cr_uid != 0) {
+	if((ap->a_td->td_ucred->cr_uid != 0 || (ip->dinode_u.din2->di_uid) != ap->a_td->td_ucred->cr_uid)) {
+		printf("%d\n", (int)ap->a_td->td_ucred->cr_uid);
+		printf("%d\n", (int)ip->dinode_u.din2->di_uid);
 		int i, j;
 		for (i = 0 ; i < MAX_ACLS_MYFS ; i++) {
 			if (ip->dinode_u.din2->myfs_acl_uid[i].id == ap->a_td->td_ucred->cr_uid) {
@@ -406,6 +408,7 @@ relock:
 		}
 
 		for (i = 0 ; i < MAX_ACLS_MYFS ; i++) {
+			printf("2nd permissions fail\n");
 			for (j = 0 ; j < ap->a_td->td_ucred->cr_ngroups ; j++) {
 				if (ap->a_td->td_ucred->cr_groups[j] == ip->dinode_u.din2->myfs_acl_gid[i].id) {
 					if (test_myfs_acl_perms(ip->dinode_u.din2->myfs_acl_uid[i].perms, accmode) == 0)
