@@ -42,7 +42,7 @@ validate_type(int type)
 int
 validate_permissions(int perms)
 {
-	if ((perms & (IEXEC | IREAD | IWRITE)) == 0)
+	if ((perms & (ACL_EXEC_MYFS | ACL_READ_MYFS | ACL_WRITE_MYFS)) == 0)
                 return 0; /* invalid */
         return 1; /* valid */
 

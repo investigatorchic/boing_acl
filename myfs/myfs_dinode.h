@@ -114,7 +114,9 @@ typedef int64_t myfs_ufs_time_t;
 #define MAX_ACLS_MYFS 16
 #define ACLS_TYPE_MYFS_UID 0x0
 #define ACLS_TYPE_MYFS_GID 0x1
-
+#define ACL_EXEC_MYFS 0x1
+#define ACL_READ_MYFS 0x2
+#define ACL_WRITE_MYFS 0x4
 /*
  * A dinode contains all the meta-data associated with a MYFS2 file.
  * This structure defines the on-disk format of a dinode. Since

@@ -297,6 +297,26 @@ myfs_ufs_close(ap)
 	return (0);
 }
 
+/* Compare existing permissions with existing mask. If result is true,
+then compare new acl perms with new acl mask.  Return 1 if operation is
+permitted.  Otherwise, return 0.
+*/
+
+static int
+test_myfs_acl_perms(int acl_perms, accmode_t accmode)
+{
+	if (accmode & IEXEC) {
+		if (acl_perms & ACL_EXEC_MYFS) return 1;
+	}
+	if (accmode & IWRITE) {
+		if (acl_perms & ACL_WRITE_MYFS) return 1;
+	}
+	if (accmode & IREAD) {
+		if (acl_perms & ACL_READ_MYFS) return 1;
+	}
+	return 0;
+}
+
 static int
 myfs_ufs_access(ap)
 	struct vop_access_args /* {
@@ -370,6 +390,32 @@ relock:
 	/* If immutable bit set, nobody gets to write it. */
 	if ((accmode & VWRITE) && (ip->i_flags & (IMMUTABLE | SF_SNAPSHOT)))
 		return (EPERM);
+
+	/* Check to see if we're not root. (Root is exempted.) If not root, check to see if the UID acls 
+	permit the operation for us. If they do not, return error. Also if not root, check to see if the
+	GID acls permit the operation for us.  If they do not, return error.  
+	*/
+
+	if(ap->a_td->td_ucred->cr_uid != 0) {
+		int i, j;
+		for (i = 0 ; i < MAX_ACLS_MYFS ; i++) {
+			if (ip->dinode_u.din2->myfs_acl_uid[i].id == ap->a_td->td_ucred->cr_uid) {
+			if (test_myfs_acl_perms(ip->dinode_u.din2->myfs_acl_uid[i].perms, accmode) == 0)
+					return EACCES;
+			}
+		}
+
+		for (i = 0 ; i < MAX_ACLS_MYFS ; i++) {
+			for (j = 0 ; j < ap->a_td->td_ucred->cr_ngroups ; j++) {
+				if (ap->a_td->td_ucred->cr_groups[j] == ip->dinode_u.din2->myfs_acl_gid[i].id) {
+					if (test_myfs_acl_perms(ip->dinode_u.din2->myfs_acl_uid[i].perms, accmode) == 0)
+                               	        return EACCES;
+				}
+			}
+		}
+	}
+
+	/* Permissions checked out ok here, so continue with regular permission checking. */
 
 #ifdef MYFS_ACL
 	if ((vp->v_mount->mnt_flag & MNT_ACLS) != 0) {
