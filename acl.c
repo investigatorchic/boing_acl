@@ -58,11 +58,13 @@ add_to_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id, u_int32_t 
 		struct myfs_acl_entry entry = ids[i];
 		if (entry.id == 0) available = i;
 		if (entry.id == id) {
+			printf("Updating acl\n");
 			entry.perms = perms; 
 			return 0; /*update successful*/
 		}	
 	}
 	if(available != -1) {
+		printf("New acl\n");
 		ids[available].id = id; 
 		ids[available].perms = perms;
 		return 0;
