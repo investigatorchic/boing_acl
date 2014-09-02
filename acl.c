@@ -55,16 +55,13 @@ add_to_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id, u_int32_t 
 	int available = -1;
 
 	for(i = 0 ; i < ids_length ; i++) {
-		struct myfs_acl_entry entry = ids[i];
-		if (entry.id == 0) available = i;
-		if (entry.id == id) {
-			printf("Updating acl\n");
-			entry.perms = perms; 
+		if (ids[i].id == 0) available = i;
+		if (ids[i].id == id) {
+			ids[i].perms = perms; 
 			return 0; /*update successful*/
 		}	
 	}
 	if(available != -1) {
-		printf("New acl\n");
 		ids[available].id = id; 
 		ids[available].perms = perms;
 		return 0;
@@ -80,14 +77,13 @@ clear_from_acl_by_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 	if(id == 0) return EINVAL;
 
 	for(i = 0 ; i < ids_length ; i++) {
-                struct myfs_acl_entry entry = ids[i];
-                if (entry.id == id) {
-                        entry.perms = 0;
-			entry.id = 0;
+                if (ids[i].id == id) {
+                        ids[i].perms = 0;
+			ids[i].id = 0;
                         return 0; /*clear successful*/
                 }
 	}
-	return 0;
+	return -1;
 }
 
 int
@@ -109,14 +105,11 @@ get_acl_id(struct myfs_acl_entry *ids, int ids_length, id_t id)
 	int i;
 	printf("108\n");
 	for(i = 0 ; i < ids_length ; i++) {
-		struct myfs_acl_entry entry = ids[i];
-		printf("%d == %d: %d | %d\n", (int) id, (int) entry.id, entry.id == id, ((int) entry.id) == ((int) id) );
-		if (entry.id == id) {
-			printf("before entry.perms\n");
-			return entry.perms;
+		if (ids[i].id == id) {
+			return ids[i].perms;
 		}
 	}	
-	return 1;
+	return -1;
 }
 
 int
@@ -180,17 +173,13 @@ process_acl_clear(struct thread *td, struct myfs_inode *my_inode, struct clearac
 int
 process_acl_get(struct thread *td, struct myfs_inode *my_inode, struct getacl_args *uap)
 {
-	printf("179\n");
 	int result = EPERM;
-	printf("181\n");
         id_t idnum = uap->idnum;
-	printf("183\n");
  		switch(uap->type) {
                         case ACLS_TYPE_MYFS_UID:
 				if (IAMGROOT || (UID_NOW == my_inode->dinode_u.din2->di_uid)) {
                                 	if (idnum == 0) idnum = UID_NOW;
                                 	result = get_acl_id(my_inode->dinode_u.din2->myfs_acl_uid, sizeof(my_inode->dinode_u.din2->myfs_acl_uid) / sizeof(struct myfs_acl_entry), idnum);
-                                	printf("%d\n" , result);
 				}
 				else {
 					result = EPERM;
@@ -217,19 +206,13 @@ sys_setacl(struct thread *td, struct setacl_args *uap)
 	char fname[256];
 	size_t actual = 0;
 
-	printf("pre-copyinstr\n");
 	copyinstr(uap->name, &fname, 255, &actual);
-	printf("first if\n");
-	printf("%d\n", uap->type);
-	printf("%d\n", uap->perms);
 	if ( (validate_type(uap->type) == 0 ) && ( validate_permissions( uap->perms ) == 0) ) {
-		printf("second if\n");
 		return EINVAL;
 	}
 
 	NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, uap->name, td);
 	if ((error = namei(&nd)) != 0){
-		printf("221\n");
 		return error;
 	}
 	NDFREE(&nd, NDF_ONLY_PNBUF);
@@ -257,10 +240,7 @@ sys_clearacl(struct thread *td, struct clearacl_args *uap)
 	struct nameidata nd;
 	char fname[256];
 	size_t actual = 0;
-	printf("pre-copyinstr\n");
 	copyinstr(uap->name, &fname, 255, &actual);
-	printf("first if\n");
-        printf("%d\n", uap->type);
 	if ( (validate_type(uap->type) == 0 )) {
 		return EINVAL;
 	}
@@ -293,10 +273,7 @@ sys_getacl(struct thread *td, struct getacl_args *uap)
 	struct nameidata nd;
 	char fname[256];
 	size_t actual = 0;
-	printf("pre-copyinstr\n");
 	copyinstr(uap->name, &fname, 255, &actual);
-	printf("first if\n");
-        printf("%d\n", uap->type);
 	if ( (validate_type(uap->type) == 0 )) {
 		return EINVAL;
 	}
@@ -312,7 +289,6 @@ sys_getacl(struct thread *td, struct getacl_args *uap)
 		uprintf("File was in a myfs filesystem.\n");
 		my_inode = MYFS_VTOI(nd.ni_vp);
 	 	error = process_acl_get(td, my_inode, uap);
-		printf("%d\n" , error);
 		VI_UNLOCK(nd.ni_vp);	
 	}
 	else {
@@ -320,6 +296,5 @@ sys_getacl(struct thread *td, struct getacl_args *uap)
 		error = EPERM;
 	}
 	vrele(nd.ni_vp);
-	printf("%d\n" , error);
 	return error;
 }
